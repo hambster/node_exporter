@@ -80,6 +80,12 @@
 			"revisionTime": "2016-05-03T22:05:32Z"
 		},
 		{
+			"checksumSHA1": "mE6Z6188Vo/KGxG3sxMuQGTRPR8=",
+			"path": "github.com/prometheus/node_exporter/collector",
+			"revision": "4932fcaa2e9336a3b550d7f6be7d0b6c9beb8aa7",
+			"revisionTime": "2016-08-20T18:37:49Z"
+		},
+		{
 			"path": "github.com/prometheus/procfs",
 			"revision": "406e5b7bfd8201a36e2bb5f7bdae0b03380c2ce8",
 			"revisionTime": "2015-10-29T15:50:50-04:00"
@@ -95,5 +101,5 @@
 			"revisionTime": "2015-12-10T17:34:15-08:00"
 		}
 	],
-	"rootPath": "github.com/prometheus/node_exporter"
+	"rootPath": "github.com/hambster/node_exporter"
 }
