@@ -24,10 +24,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hambster/node_exporter/collector"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"github.com/prometheus/common/version"
-	"github.com/prometheus/node_exporter/collector"
 )
 
 const (
@@ -161,21 +161,42 @@ func main() {
 	prometheus.MustRegister(nodeCollector)
 
 	handler := prometheus.Handler()
-
-	http.Handle(*metricsPath, handler)
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`<html>
-			<head><title>Node Exporter</title></head>
-			<body>
-			<h1>Node Exporter</h1>
-			<p><a href="` + *metricsPath + `">Metrics</a></p>
-			</body>
-			</html>`))
-	})
+	aclHandler := &AccessControlerHandler{
+		MetricsPath:    *metricsPath,
+		MetricsHandler: handler,
+		AllowIP:        "127.0.0.1",
+	}
 
 	log.Infoln("Listening on", *listenAddress)
-	err = http.ListenAndServe(*listenAddress, nil)
+	err = http.ListenAndServe(*listenAddress, aclHandler)
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+// a wrapper to implement IP access control on node exporter
+type AccessControlerHandler struct {
+	AllowIP        string // allow IPs to access exporter
+	MetricsPath    string // path to serve metrics
+	MetricsHandler http.Handler
+}
+
+func (a *AccessControlerHandler) ServeHTTP(rsp http.ResponseWriter, req *http.Request) {
+	ip := req.RemoteAddr
+	if idx := strings.Index(req.RemoteAddr, ":"); -1 != idx {
+		ip = string(req.RemoteAddr[0:idx])
+	}
+
+	if ip != a.AllowIP {
+		rsp.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	if a.MetricsPath == req.URL.Path {
+		a.MetricsHandler.ServeHTTP(rsp, req)
+		return
+	}
+
+	rsp.WriteHeader(http.StatusNotFound)
+	return
 }
